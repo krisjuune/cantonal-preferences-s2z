@@ -94,10 +94,10 @@ translate_dict_heat = {
 
 # %% define dummies
 
-df = df_heat
-translate_dict = translate_dict_heat
-attributes = attributes_heat
-baselines = baselines_heat
+df = df_pv
+translate_dict = translate_dict_pv
+attributes = attributes_pv
+baselines = baselines_pv
 
 df = apply_mapping(df, translate_dict)
 

@@ -124,6 +124,21 @@ chart = alt.Chart(cantonal_beta).encode(
 chart.save("output/beta_canton_plot.html")  # Save to an HTML file
 # chart.show()  # Show the plot in your notebook or IDE
 
+# %% test map
+
+# Load GeoJSON file for Swiss cantons in WGS84
+cantons = gpd.read_file("data/swiss_cantons.geojson")
+
+# Add a column with random values to simulate data
+cantons["random_value"] = np.random.uniform(-1, 1, size=len(cantons))
+
+# Plot using the random values with a red-to-blue color scheme
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+cantons.plot(column='random_value', cmap='coolwarm', legend=True, ax=ax)
+
+# Add title and display
+plt.title("Swiss Cantons with Random Values (Red to Blue)")
+plt.show()
 
 
 # %% plotting attribute levels on map
@@ -218,18 +233,3 @@ cbar.set_label("Partworth utility", fontsize=12)
 plt.show()
 
 
-# %% test map
-
-# Load GeoJSON file for Swiss cantons in WGS84
-cantons = gpd.read_file("data/swiss_cantons.geojson")
-
-# Add a column with random values to simulate data
-cantons["random_value"] = np.random.uniform(-1, 1, size=len(cantons))
-
-# Plot using the random values with a red-to-blue color scheme
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-cantons.plot(column='random_value', cmap='coolwarm', legend=True, ax=ax)
-
-# Add title and display
-plt.title("Swiss Cantons with Random Values (Red to Blue)")
-plt.show()
