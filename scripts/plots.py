@@ -141,14 +141,25 @@ plt.title("Swiss Cantons with Random Values (Red to Blue)")
 plt.show()
 
 
-# %% plotting attribute levels on map
+# %% define levels for maps
 
-# filter for the specific level
+# filter for specific attribute levels
 # pv
 beta_potential = cantonal_beta[cantonal_beta['level'] == "distribution_potential-based"]
+beta_equal = cantonal_beta[cantonal_beta['level'] == "distribution_equal-pp"]
+beta_min = cantonal_beta[cantonal_beta['level'] == "distribution_min-limit"]
+beta_max = cantonal_beta[cantonal_beta['level'] == "distribution_max-limit"]
+beta_nodistribution = cantonal_beta[cantonal_beta['level'] == "distribution_none"]
+
 beta_alpine = cantonal_beta[cantonal_beta['level'] == "tradeoffs_alpine"]
 beta_lakes = cantonal_beta[cantonal_beta['level'] == "tradeoffs_lakes"]
-beta_imports = cantonal_beta[cantonal_beta['level'] == "imports_0%"]
+beta_forests = cantonal_beta[cantonal_beta['level'] == "tradeoffs_lakes"]
+beta_notradeoffs = cantonal_beta[cantonal_beta['level'] == "tradeoffs_none"]
+
+beta_0 = cantonal_beta[cantonal_beta['level'] == "imports_0%"]
+beta_10 = cantonal_beta[cantonal_beta['level'] == "imports_10%"]
+beta_20 = cantonal_beta[cantonal_beta['level'] == "imports_20%"]
+beta_30 = cantonal_beta[cantonal_beta['level'] == "imports_30%"]
 
 # heat
 beta_phaseout = cantonal_beta[cantonal_beta['level'] == "year_2040"]
@@ -156,46 +167,38 @@ beta_tax = cantonal_beta[cantonal_beta['level'] == "tax_100%"]
 beta_subsidy = cantonal_beta[cantonal_beta['level'] == "heatpump_subsidy"]
 beta_lowincome = cantonal_beta[cantonal_beta['level'] == "exemption_low"]
 
-# # choose level for plotting
-# beta_per_level = beta_alpine
-
-# # Merge the beta data with the GeoDataFrame by matching canton names
-# merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
-# merged_df = merged_df.drop(columns=["DATUM_AEND", "DATUM_ERST"])
-
-# # Convert the merged GeoDataFrame to a GeoJSON format for Altair
-# merged_geojson = json.loads(merged_df.to_json())
-
-# # Create an Altair chart using the GeoJSON data
-# chart = alt.Chart(alt.Data(values=merged_geojson)).mark_geoshape().encode(
-#     color=alt.Color('beta:Q', scale=alt.Scale(scheme='redblue', domainMid=0), title="Partworth"),
-#     tooltip=['NAME:N', 'beta:Q']  # Optional: show canton name and beta value on hover
-# ).properties(
-#     width=500,
-#     height=500,
-#     title="Distribution Potential-based Beta Values across Swiss Cantons"
-# )
-
-# # Save or display the map
-# chart.save("map_distribution_potential_pv.html")
-
-# plot with matplotlib
-# fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-# merged_df.plot(column='beta', cmap='viridis', legend=True, ax=ax)
-# #coolmap for blue to red
-
-# # Add title and display
-# plt.title("Support for renewable energy infrastructure in Alpine regions")
-# plt.show()
-
 # Define levels and data for each map
+
+# pv
 levels_pv = {
     "distribution_potential-based": beta_potential,
-    "imports_0%": beta_imports,
+    "imports_0%": beta_0,
     "tradeoffs_alpine": beta_alpine,
     "tradeoffs_lakes": beta_lakes,
 }
 
+levels_distribution = {
+    "distribution_none": beta_nodistribution,
+    "distribution_potential-based": beta_potential,
+    "distribution_equal-pp": beta_equal,
+    "distribution_max-limit": beta_max
+}
+
+levels_tradeoffs = {
+    "tradeoffs_none": beta_notradeoffs,
+    "tradeoffs_forests": beta_forests,
+    "tradeoffs_alpine": beta_alpine,
+    "tradeoffs_lakes": beta_lakes
+}
+
+levels_imports = {
+    "imports_0%": beta_0, 
+    "imports_10%": beta_10, 
+    "imports_20%": beta_20, 
+    "imports_30%": beta_30
+}
+
+# heat
 levels_heat = {
     "year_2040": beta_phaseout,
     "tax_100%": beta_tax,
@@ -203,13 +206,52 @@ levels_heat = {
     "exemption_low": beta_lowincome
 }
 
-levels = levels_heat
+# levels = levels_tradeoffs
+# levels = levels_distribution
+levels = levels_imports
+
+# %% maps that don't work
+
+# choose level for plotting
+beta_per_level = beta_alpine
+
+# Merge the beta data with the GeoDataFrame by matching canton names
+merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
+merged_df = merged_df.drop(columns=["DATUM_AEND", "DATUM_ERST"])
+
+# Convert the merged GeoDataFrame to a GeoJSON format for Altair
+merged_geojson = json.loads(merged_df.to_json())
+
+# Create an Altair chart using the GeoJSON data
+chart = alt.Chart(alt.Data(values=merged_geojson)).mark_geoshape().encode(
+    color=alt.Color('beta:Q', scale=alt.Scale(scheme='redblue', domainMid=0), title="Partworth"),
+    tooltip=['NAME:N', 'beta:Q']  # Optional: show canton name and beta value on hover
+).properties(
+    width=500,
+    height=500,
+    title="Distribution Potential-based Beta Values across Swiss Cantons"
+)
+
+# Save or display the map
+chart.save("map_distribution_potential_pv.html")
+
+plot with matplotlib
+fig, ax = plt.subplots(1, 1, figsize=(10, 10))
+merged_df.plot(column='beta', cmap='viridis', legend=True, ax=ax)
+#coolmap for blue to red
+
+# Add title and display
+plt.title("Support for renewable energy infrastructure in Alpine regions")
+plt.show()
+
+# %% plotting attribute levels on map
 
 # Set up a color map and normalization to standardize color scale across maps
 # cmap = plt.cm.viridis
 cmap = plt.cm.coolwarm.reversed()
 
-norm = mcolors.Normalize(vmin=cantonal_beta['beta'].min(), vmax=cantonal_beta['beta'].max())
+norm = mcolors.Normalize(vmin=-0.4, vmax=beta_0['beta'].max())
+# norm = mcolors.Normalize(vmin=cantonal_beta['beta'].min(), vmax=cantonal_beta['beta'].max())
 
 fig, axes = plt.subplots(2, 2, figsize=(15, 12), constrained_layout=True)
 
@@ -233,3 +275,5 @@ cbar.set_label("Partworth utility", fontsize=12)
 plt.show()
 
 
+
+# %%
