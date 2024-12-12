@@ -6,19 +6,17 @@ from functions.conjoint_assist import prep_conjoint
 #%% reset working directory
 import os
 print(os.getcwd())
-wd = '/Users/kristiinajoon/Documents/Projects/conjoints-s2z'
+wd = '/Users/krikri/Documents/Projects/cantonal-preferences-s2z'
 os.chdir(wd)
-
 
 
 #%% ############################# read data ##################################
 
-df = pd.read_csv('data/raw_conjoint.csv', low_memory = False)
+df = pd.read_csv('data/raw_conjoint_120624.csv', low_memory = False, skiprows = [1,2])
 
 # check data 
 pd.set_option('display.max_columns', None) # displays all columns when printing parts of the df
 columns = df.columns.tolist()
-df = df.drop([0, 1]) # remove first two rows
 
 
 
@@ -109,7 +107,7 @@ rating_values = ['Stark dagegen',
                  'Eher dafür',
                  'Dafür',
                  'Stark dafür']
-rating_scale = np.array(list(zip(rating_values, binary_values)))
+rating_scale = np.array(list(zip(rating_values, numerical_values)))
 likert_dict = {**dict(rating_scale)}
 df = apply_mapping(df, likert_dict, column_pattern=['justice', 'rating'])
 

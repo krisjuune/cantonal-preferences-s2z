@@ -76,7 +76,7 @@ desired_order_heat = [
     "exemptions_low-mid"
 ]
 
-desired_order = desired_order_heat
+desired_order = desired_order_pv
 
 # %% get cantonal boundaries
 

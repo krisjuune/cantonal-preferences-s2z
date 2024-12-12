@@ -4,6 +4,16 @@ import arviz as az
 import xarray as xr
 from functions.data_assist import apply_mapping
 
+# %% pymc bug workaround
+
+import pytensor
+pytensor.config.cxx = '/usr/bin/clang++'
+
+# %% import data
+
+df_pv = pd.read_csv("data/pv-conjoint.csv")
+df_heat = pd.read_csv("data/heat-conjoint.csv")
+
 # %% define lists and translations
 
 attributes_pv = [ 
@@ -173,7 +183,7 @@ with pm.Model(coords = coords) as bayes_model:
         dims = ["task"]
     )
 
-    attribute_levels_left = pm.ConstantData(
+    attribute_levels_left = pm.Data(
         "attribute_levels_left", 
         dummies[df.pack_num_cat == "Left"].values, 
         dims = ["task", "level"])
@@ -183,7 +193,7 @@ with pm.Model(coords = coords) as bayes_model:
         pm.math.sum(attribute_levels_left * beta[c, :], axis = 1), 
         dims = "task")
     
-    attribute_levels_right = pm.ConstantData(
+    attribute_levels_right = pm.Data(
         "attribute_levels_right", 
         dummies[df.pack_num_cat == "Right"].values, 
         dims = ["task", "level"])
@@ -217,6 +227,7 @@ az.summary(priors, var_names = ["canton_sigma"])
 
 # %% run model with MCMC
 
+# run model with MCMC with 1000 draws, 500 tune samples, and 4 chains
 inference_data = pm.sample(
     model = bayes_model, 
     draws = 1000, 
