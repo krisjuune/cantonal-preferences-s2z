@@ -246,4 +246,8 @@ inference_data = pm.sample(
 inference_data["posterior"]["canton_effect"].mean(["chain", "draw"]).max(["canton"])
 az.plot_trace(inference_data, var_names = ["beta_mean", "canton_sigma", "beta"])
 
+# %% save to file 
+
+inference_data.to_netcdf("output/inference_data.nc")
+
 # %%

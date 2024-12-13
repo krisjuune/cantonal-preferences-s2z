@@ -13,4 +13,5 @@ dependencies:
   - ipywidgets
   - altair
   - geopandas
+  - netcdf4
 prefix: /opt/anaconda3/envs/cantonal-conjoint

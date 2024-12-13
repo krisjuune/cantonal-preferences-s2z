@@ -1,4 +1,5 @@
 import altair as alt
+import xarray as xr
 import geopandas as gpd
 from shapely.ops import transform
 import pyproj
@@ -6,6 +7,10 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.colors as mcolors
+
+# %% import data
+
+inference_data = xr.open_dataset("output/inference_data.nc", engine="netcdf4")
 
 # %% get pathworth utilities
 
