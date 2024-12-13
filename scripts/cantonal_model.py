@@ -104,10 +104,10 @@ translate_dict_heat = {
 
 # %% define dummies
 
-df = df_pv
-translate_dict = translate_dict_pv
-attributes = attributes_pv
-baselines = baselines_pv
+df = df_heat
+translate_dict = translate_dict_heat
+attributes = attributes_heat
+baselines = baselines_heat
 
 df = apply_mapping(df, translate_dict)
 
@@ -227,13 +227,13 @@ az.summary(priors, var_names = ["canton_sigma"])
 
 # %% run model with MCMC
 
-# run model with MCMC with 1000 draws, 500 tune samples, and 4 chains on 4 cores
+# run model with MCMC with 1000 draws, 500 tune samples, and 4 chains on 6 cores
 inference_data = pm.sample(
     model = bayes_model, 
     draws = 1000, 
     tune = 500, 
     chains = 4,
-    cores = 4, 
+    cores = 6, 
     random_seed = 42, 
     return_inferencedata = True, 
     target_accept = 0.9

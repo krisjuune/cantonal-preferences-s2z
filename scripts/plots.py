@@ -23,6 +23,8 @@ cantonal_beta = cantonal_beta.merge(beta_mean,
 # add total pathworth utilities (canton dependent)
 cantonal_beta["beta"] = cantonal_beta["cantonal_beta"] + cantonal_beta["beta_mean"]
 
+# %% define and choose order 
+
 # attribute level order for plotting
 desired_order_pv = [
     "mix_hydro", 
@@ -76,7 +78,7 @@ desired_order_heat = [
     "exemptions_low-mid"
 ]
 
-desired_order = desired_order_pv
+desired_order = desired_order_heat
 
 # %% get cantonal boundaries
 
@@ -138,27 +140,39 @@ beta_lakes = cantonal_beta[cantonal_beta['level'] == "tradeoffs_lakes"]
 beta_forests = cantonal_beta[cantonal_beta['level'] == "tradeoffs_lakes"]
 beta_notradeoffs = cantonal_beta[cantonal_beta['level'] == "tradeoffs_none"]
 
-beta_0 = cantonal_beta[cantonal_beta['level'] == "imports_0%"]
-beta_10 = cantonal_beta[cantonal_beta['level'] == "imports_10%"]
-beta_20 = cantonal_beta[cantonal_beta['level'] == "imports_20%"]
-beta_30 = cantonal_beta[cantonal_beta['level'] == "imports_30%"]
+beta_0imports = cantonal_beta[cantonal_beta['level'] == "imports_0%"]
+beta_10imports = cantonal_beta[cantonal_beta['level'] == "imports_10%"]
+beta_20imports = cantonal_beta[cantonal_beta['level'] == "imports_20%"]
+beta_30imports = cantonal_beta[cantonal_beta['level'] == "imports_30%"]
 
 # heat
-beta_phaseout = cantonal_beta[cantonal_beta['level'] == "year_2040"]
-beta_tax = cantonal_beta[cantonal_beta['level'] == "tax_100%"]
+beta_2030 = cantonal_beta[cantonal_beta['level'] == "year_2030"]
+beta_2035 = cantonal_beta[cantonal_beta['level'] == "year_2035"]
+beta_2040 = cantonal_beta[cantonal_beta['level'] == "year_2040"]
+beta_2045 = cantonal_beta[cantonal_beta['level'] == "year_2045"]
+beta_2050 = cantonal_beta[cantonal_beta['level'] == "year_2050"]
+
+beta_0tax = cantonal_beta[cantonal_beta['level'] == "tax_0%"]
+beta_25tax = cantonal_beta[cantonal_beta['level'] == "tax_25%"]
+beta_50tax = cantonal_beta[cantonal_beta['level'] == "tax_50%"]
+beta_75tax = cantonal_beta[cantonal_beta['level'] == "tax_75%"]
+beta_100tax = cantonal_beta[cantonal_beta['level'] == "tax_100%"]
+
 beta_subsidy = cantonal_beta[cantonal_beta['level'] == "heatpump_subsidy"]
-beta_lowincome = cantonal_beta[cantonal_beta['level'] == "exemption_low"]
+beta_lease = cantonal_beta[cantonal_beta['level'] == "heatpump_lease"]
+beta_subscription = cantonal_beta[cantonal_beta['level'] == "heatpump_subscription"]
+
+beta_noban = cantonal_beta[cantonal_beta['level'] == "ban_none"]
+beta_newban = cantonal_beta[cantonal_beta['level'] == "ban_new"]
+beta_allban = cantonal_beta[cantonal_beta['level'] == "ban_all"]
+
+beta_noexemption = cantonal_beta[cantonal_beta['level'] == "exemption_none"]
+beta_low = cantonal_beta[cantonal_beta['level'] == "exemption_low"]
+beta_lowmid = cantonal_beta[cantonal_beta['level'] == "exemption_low-mid"]
 
 # Define levels and data for each map
 
 # pv
-levels_pv = {
-    "distribution_potential-based": beta_potential,
-    "imports_0%": beta_0,
-    "tradeoffs_alpine": beta_alpine,
-    "tradeoffs_lakes": beta_lakes,
-}
-
 levels_distribution = {
     "distribution_none": beta_nodistribution,
     "distribution_potential-based": beta_potential,
@@ -174,23 +188,36 @@ levels_tradeoffs = {
 }
 
 levels_imports = {
-    "imports_0%": beta_0, 
-    "imports_10%": beta_10, 
-    "imports_20%": beta_20, 
-    "imports_30%": beta_30
+    "imports_0%": beta_0imports, 
+    "imports_10%": beta_10imports, 
+    "imports_20%": beta_20imports, 
+    "imports_30%": beta_30imports
 }
 
 # heat
-levels_heat = {
-    "year_2040": beta_phaseout,
-    "tax_100%": beta_tax,
-    "heatpump_subsidy": beta_subsidy,
-    "exemption_low": beta_lowincome
+levels_year = {
+    "year_2030": beta_2030,
+    "year_2040": beta_2040,
+    "year_2050": beta_2050,
 }
 
-# levels = levels_tradeoffs
-# levels = levels_distribution
-levels = levels_imports
+levels_tax = {
+    "tax_0%": beta_0tax,
+    "tax_50%": beta_50tax,
+    "tax_100%": beta_100tax,
+}
+
+levels_ban = {
+    "ban_none": beta_noban,
+    "ban_new": beta_newban,
+    "ban_all": beta_allban,
+}
+
+levels_exemption = {
+    "exemption_none": beta_noexemption,
+    "exemption_low": beta_low,
+    "exemption_low-mid": beta_lowmid,
+}
 
 
 # %% plotting attribute levels on map
@@ -207,7 +234,7 @@ def plot_cantonal_beta_map(levels_dict, filename_suffix, cmap=plt.cm.coolwarm.re
         vmin (float): Minimum value for normalization. Default is -0.4.
         vmax (float): Maximum value for normalization. Default is computed from data.
     """
-    # Compute global vmax if not provided
+    # compute vmin and vmax if not provided
     if vmin is None:
         vmin = min(df['beta'].min() for df in levels_dict.values())
 
@@ -216,12 +243,17 @@ def plot_cantonal_beta_map(levels_dict, filename_suffix, cmap=plt.cm.coolwarm.re
 
     norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
     num_levels = len(levels_dict)
-    rows = (num_levels + 1) // 2
-    fig, axes = plt.subplots(rows, 2, figsize=(15, rows * 6), constrained_layout=True)
+    if num_levels <= 3:
+        rows = 1
+        cols = num_levels 
+    else:
+        rows = 2  
+        cols = (num_levels + 1) // 2 if num_levels % 2 != 0 else num_levels // 2 
+    fig, axes = plt.subplots(rows, cols, figsize=(15, rows * 6), constrained_layout=True)
 
-    # Flatten axes for easier iteration, if only one row adjust to single dimension
+    # flatten axes for easier iteration, if only one row adjust to single dimension
     if rows == 1:
-        axes = [axes]
+        axes = np.array(axes)
 
     # Iterate over levels and plot each map
     for ax, (level_name, beta_level) in zip(axes.flat, levels_dict.items()):
@@ -245,13 +277,20 @@ def plot_cantonal_beta_map(levels_dict, filename_suffix, cmap=plt.cm.coolwarm.re
     cbar.set_label("Partworth utility", fontsize=12)
 
     # Save the figure
-    plt.savefig(f"cantonal_{filename_suffix}.png", dpi=300)
+    plt.savefig(f"output/cantonal_{filename_suffix}.png", dpi=300)
     plt.show()
 
-# Call the function for each levels dictionary
-plot_cantonal_beta_map(levels_distribution, "distribution", vmin = None)
-plot_cantonal_beta_map(levels_tradeoffs, "tradeoffs", vmin = None)
-plot_cantonal_beta_map(levels_imports, "imports", vmin = None)
+# %% get plots 
+# plot pv experiment maps
+# plot_cantonal_beta_map(levels_distribution, "distribution", vmin = None)
+# plot_cantonal_beta_map(levels_tradeoffs, "tradeoffs", vmin = None)
+# plot_cantonal_beta_map(levels_imports, "imports", vmin = None)
+
+# plot heat experiment maps
+plot_cantonal_beta_map(levels_year, "year", vmin = None)
+plot_cantonal_beta_map(levels_tax, "tax", vmin = None)
+plot_cantonal_beta_map(levels_ban, "ban", vmin = None)
+plot_cantonal_beta_map(levels_exemption, "exemption", vmin = None)
 
 # %% cantonal variance
 
