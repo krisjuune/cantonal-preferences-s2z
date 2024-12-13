@@ -1,0 +1,16 @@
+name: cantonal-conjoint
+channels:
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - arviz
+  - numpy
+  - pandas
+  - pymc
+  - python=3.12
+  - xarray
+  - ipykernel
+  - ipywidgets
+  - altair
+  - geopandas
+prefix: /opt/anaconda3/envs/cantonal-conjoint
