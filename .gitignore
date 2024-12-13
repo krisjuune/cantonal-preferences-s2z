@@ -1,5 +1,7 @@
 /data
-*/__pycache__
-.DS_Store
+/output
+/functions/__pycache__
+/functions/__pycache__/conjoint_assist.cpython-312.pyc
+/functions/__pycache__/data_assist.cpython-312.pyc
 .gitignore
-
+.DS_Store

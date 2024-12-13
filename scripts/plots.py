@@ -195,33 +195,6 @@ levels = levels_imports
 
 # %% plotting attribute levels on map
 
-# # Set up a color map and normalization to standardize color scale across maps
-# cmap = plt.cm.coolwarm.reversed()
-
-# norm = mcolors.Normalize(vmin=-0.4, vmax=beta_0['beta'].max())
-# # norm = mcolors.Normalize(vmin=cantonal_beta['beta'].min(), vmax=cantonal_beta['beta'].max())
-
-# fig, axes = plt.subplots(2, 2, figsize=(15, 12), constrained_layout=True)
-
-# # Iterate over levels to plot each map in a subplot
-# for ax, (title, beta_level) in zip(axes.flat, levels.items()):
-#     # Merge data for the specific level
-#     beta_per_level = beta_level
-#     merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
-    
-#     # Plot each level with shared color scale
-#     merged_df.plot(column='beta', cmap=cmap, legend=False, ax=ax, norm=norm)
-#     ax.set_title(f"{title.replace('_', ' ').capitalize()}")
-
-# # Add one common color bar on the right of the figure
-# cbar = fig.colorbar(
-#     plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axes, orientation='horizontal',
-#     fraction=0.03, pad=0.1
-# )
-# cbar.set_label("Partworth utility", fontsize=12)
-
-# plt.show()
-
 # Define a function to plot maps and save them
 def plot_cantonal_beta_map(levels_dict, filename_suffix, cmap=plt.cm.coolwarm.reversed(), vmin=-0.4, vmax=None):
     """
