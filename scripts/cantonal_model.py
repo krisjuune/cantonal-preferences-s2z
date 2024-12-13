@@ -227,11 +227,12 @@ az.summary(priors, var_names = ["canton_sigma"])
 
 # %% run model with MCMC
 
-# run model with MCMC with 1000 draws, 500 tune samples, and 4 chains
+# run model with MCMC with 1000 draws, 500 tune samples, and 4 chains on 4 cores
 inference_data = pm.sample(
     model = bayes_model, 
     draws = 1000, 
     tune = 500, 
+    chains = 4,
     cores = 4, 
     random_seed = 42, 
     return_inferencedata = True, 

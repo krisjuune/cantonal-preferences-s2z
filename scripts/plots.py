@@ -106,24 +106,6 @@ cantons = gpd.read_file('data/swiss_cantons.geojson')
 # Transform geometries to WGS84
 cantons['geometry'] = cantons['geometry'].apply(lambda geom: transform(project, geom) if geom is not None else None)
 
-# %% cantonal variance
-
-chart = alt.Chart(cantonal_beta).encode(
-    # quantitative axis for beta values
-    x='beta:Q',
-    # each level on separate row
-    y=alt.Y('level:N', sort=desired_order), 
-    # use a single color for all cantons
-    color=alt.value("steelblue")
-#     color='canton:N',  # Color each canton differently
-).mark_circle(size=30, opacity=0.8).properties(
-    width=600,
-)
-
-# Save or display the plot
-chart.save("output/beta_canton_plot.html")  # Save to an HTML file
-# chart.show()  # Show the plot in your notebook or IDE
-
 # %% test map
 
 # Load GeoJSON file for Swiss cantons in WGS84
@@ -210,69 +192,111 @@ levels_heat = {
 # levels = levels_distribution
 levels = levels_imports
 
-# %% maps that don't work
-
-# choose level for plotting
-beta_per_level = beta_alpine
-
-# Merge the beta data with the GeoDataFrame by matching canton names
-merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
-merged_df = merged_df.drop(columns=["DATUM_AEND", "DATUM_ERST"])
-
-# Convert the merged GeoDataFrame to a GeoJSON format for Altair
-merged_geojson = json.loads(merged_df.to_json())
-
-# Create an Altair chart using the GeoJSON data
-chart = alt.Chart(alt.Data(values=merged_geojson)).mark_geoshape().encode(
-    color=alt.Color('beta:Q', scale=alt.Scale(scheme='redblue', domainMid=0), title="Partworth"),
-    tooltip=['NAME:N', 'beta:Q']  # Optional: show canton name and beta value on hover
-).properties(
-    width=500,
-    height=500,
-    title="Distribution Potential-based Beta Values across Swiss Cantons"
-)
-
-# Save or display the map
-chart.save("map_distribution_potential_pv.html")
-
-plot with matplotlib
-fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-merged_df.plot(column='beta', cmap='viridis', legend=True, ax=ax)
-#coolmap for blue to red
-
-# Add title and display
-plt.title("Support for renewable energy infrastructure in Alpine regions")
-plt.show()
 
 # %% plotting attribute levels on map
 
-# Set up a color map and normalization to standardize color scale across maps
-# cmap = plt.cm.viridis
-cmap = plt.cm.coolwarm.reversed()
+# # Set up a color map and normalization to standardize color scale across maps
+# cmap = plt.cm.coolwarm.reversed()
 
-norm = mcolors.Normalize(vmin=-0.4, vmax=beta_0['beta'].max())
-# norm = mcolors.Normalize(vmin=cantonal_beta['beta'].min(), vmax=cantonal_beta['beta'].max())
+# norm = mcolors.Normalize(vmin=-0.4, vmax=beta_0['beta'].max())
+# # norm = mcolors.Normalize(vmin=cantonal_beta['beta'].min(), vmax=cantonal_beta['beta'].max())
 
-fig, axes = plt.subplots(2, 2, figsize=(15, 12), constrained_layout=True)
+# fig, axes = plt.subplots(2, 2, figsize=(15, 12), constrained_layout=True)
 
-# Iterate over levels to plot each map in a subplot
-for ax, (title, beta_level) in zip(axes.flat, levels.items()):
-    # Merge data for the specific level
-    beta_per_level = beta_level
-    merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
+# # Iterate over levels to plot each map in a subplot
+# for ax, (title, beta_level) in zip(axes.flat, levels.items()):
+#     # Merge data for the specific level
+#     beta_per_level = beta_level
+#     merged_df = cantons.merge(beta_per_level, left_on="NAME", right_on="canton", how="left")
     
-    # Plot each level with shared color scale
-    merged_df.plot(column='beta', cmap=cmap, legend=False, ax=ax, norm=norm)
-    ax.set_title(f"{title.replace('_', ' ').capitalize()}")
+#     # Plot each level with shared color scale
+#     merged_df.plot(column='beta', cmap=cmap, legend=False, ax=ax, norm=norm)
+#     ax.set_title(f"{title.replace('_', ' ').capitalize()}")
 
-# Add one common color bar on the right of the figure
-cbar = fig.colorbar(
-    plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axes, orientation='horizontal',
-    fraction=0.03, pad=0.1
+# # Add one common color bar on the right of the figure
+# cbar = fig.colorbar(
+#     plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axes, orientation='horizontal',
+#     fraction=0.03, pad=0.1
+# )
+# cbar.set_label("Partworth utility", fontsize=12)
+
+# plt.show()
+
+# Define a function to plot maps and save them
+def plot_cantonal_beta_map(levels_dict, filename_suffix, cmap=plt.cm.coolwarm.reversed(), vmin=-0.4, vmax=None):
+    """
+    Plot maps for each level in levels_dict and saves the figure with a given filename_suffix.
+
+    Parameters:
+        levels_dict (dict): Dictionary containing level names as keys and dataframes as values.
+        filename_suffix (str): Prefix for the saved figure files.
+        cmap (Colormap): Colormap for the plot. Default is reversed coolwarm.
+        vmin (float): Minimum value for normalization. Default is -0.4.
+        vmax (float): Maximum value for normalization. Default is computed from data.
+    """
+    # Compute global vmax if not provided
+    if vmin is None:
+        vmin = min(df['beta'].min() for df in levels_dict.values())
+
+    if vmax is None:
+        vmax = max(df['beta'].max() for df in levels_dict.values())
+
+    norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+    num_levels = len(levels_dict)
+    rows = (num_levels + 1) // 2
+    fig, axes = plt.subplots(rows, 2, figsize=(15, rows * 6), constrained_layout=True)
+
+    # Flatten axes for easier iteration, if only one row adjust to single dimension
+    if rows == 1:
+        axes = [axes]
+
+    # Iterate over levels and plot each map
+    for ax, (level_name, beta_level) in zip(axes.flat, levels_dict.items()):
+        # Merge data for the specific level
+        merged_df = cantons.merge(beta_level, left_on="NAME", right_on="canton", how="left")
+
+        # Plot map
+        merged_df.plot(column='beta', cmap=cmap, legend=False, ax=ax, norm=norm)
+        ax.set_title(level_name.replace("_", " ").capitalize(), fontsize=14)
+        ax.axis("off")  # Turn off axis for clean visualization
+
+    # Hide unused subplots
+    for ax in axes.flat[len(levels_dict):]:
+        ax.axis("off")
+
+    # Add one common color bar
+    cbar = fig.colorbar(
+        plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axes, orientation='horizontal',
+        fraction=0.03, pad=0.1
+    )
+    cbar.set_label("Partworth utility", fontsize=12)
+
+    # Save the figure
+    plt.savefig(f"cantonal_{filename_suffix}.png", dpi=300)
+    plt.show()
+
+# Call the function for each levels dictionary
+plot_cantonal_beta_map(levels_distribution, "distribution", vmin = None)
+plot_cantonal_beta_map(levels_tradeoffs, "tradeoffs", vmin = None)
+plot_cantonal_beta_map(levels_imports, "imports", vmin = None)
+
+# %% cantonal variance
+
+chart = alt.Chart(cantonal_beta).encode(
+    # quantitative axis for beta values
+    x='beta:Q',
+    # each level on separate row
+    y=alt.Y('level:N', sort=desired_order), 
+    # use a single color for all cantons
+    color=alt.value("steelblue")
+#     color='canton:N',  # Color each canton differently
+).mark_circle(size=30, opacity=0.8).properties(
+    width=600,
 )
-cbar.set_label("Partworth utility", fontsize=12)
 
-plt.show()
+# Save or display the plot
+chart.save("output/beta_canton_plot.html")  # Save to an HTML file
+# chart.show()  # Show the plot in your notebook or IDE
 
 
 
