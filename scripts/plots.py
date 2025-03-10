@@ -10,7 +10,7 @@ import matplotlib.colors as mcolors
 
 # %% import data
 
-inference_data = xr.open_dataset("output/inference_data.nc", engine="netcdf4")
+inference_data = xr.open_dataset("output/inference_data_pv.nc", engine="netcdf4")
 
 # %% get pathworth utilities
 
@@ -88,7 +88,7 @@ desired_order = desired_order_heat
 # %% get cantonal boundaries
 
 # Load shapefile from https://www.swisstopo.admin.ch/de/landschaftsmodell-swissboundaries3d
-cantons_gdf = gpd.read_file("data/swissBOUNDARIES3D_1_5_TLM_KANTONSGEBIET.shp", 
+cantons_gdf = gpd.read_file("raw_data/swissBOUNDARIES3D_1_5_TLM_KANTONSGEBIET.shp", 
                             engine = "pyogrio")
 
 # Ensure that the data is projected to WGS84 (lat/lon)

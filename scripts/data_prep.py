@@ -3,19 +3,13 @@ import numpy as np
 from functions.data_assist import apply_mapping, rename_columns
 from functions.conjoint_assist import prep_conjoint
 
-#%% reset working directory
-import os
-print(os.getcwd())
-wd = '/Users/krikri/Documents/Projects/cantonal-preferences-s2z'
-os.chdir(wd)
-
 
 #%% ############################# read data ##################################
 
-df = pd.read_csv('data/raw_conjoint_120624.csv', low_memory = False, skiprows = [1,2])
+df = pd.read_csv('raw_data/raw_conjoint_120624.csv', low_memory = False, skiprows = [1,2])
 
 # check data 
-pd.set_option('display.max_columns', None) # displays all columns when printing parts of the df
+pd.set_option('display.max_columns', None)
 columns = df.columns.tolist()
 
 
@@ -56,9 +50,9 @@ df = df.dropna(subset=['canton'])
 # speeders and laggards
 # calculate the 5% and 99% quantiles
 lower_threshold = df['duration_min'].quantile(0.05)
-upper_threshold = df['duration_min'].quantile(0.99)
+upper_threshold = df['duration_min'].quantile(0.95)
 print(f"Lower threshold (lowest 5% quartile): {lower_threshold} minutes")
-print(f"Upper threshold (highest 1% quartile): {upper_threshold} minutes")
+print(f"Upper threshold (highest 5% quartile): {upper_threshold} minutes")
 df['speeder'] = df['duration_min'] < lower_threshold
 df['laggard'] = df['duration_min'] > upper_threshold 
 
@@ -73,7 +67,7 @@ df['inattentive'] = attention_mask
 
 # count the number of rows where the attention filters are True
 print(f"Number of speeders (5% fastest): {df['speeder'].sum()}")
-print(f"Number of laggards (1% slowest): {df['laggard'].sum()}")
+print(f"Number of laggards (5% slowest): {df['laggard'].sum()}")
 print(f"Number of inattentive respondents: {df['inattentive'].sum()}")
 
 # filter out rows of speeders, laggards, or inattentives
@@ -81,6 +75,8 @@ df_filtered = df[~((df['speeder'] == True) |
                    (df['laggard'] == True) |
                    (df['inattentive'] == True)
                   )]
+
+df = df_filtered
 
 # remove non-functional empty columns 
 empty_columns = [col for col in df.columns if col.endswith('_Table')]
@@ -99,8 +95,6 @@ df = rename_columns(df, 'Distribution', 'distribution')
 
 # recode likert scales in conjoints
 numerical_values = [0, 1, 2, 3, 4, 5]
-binary_values = [0, 0, 0, 1, 1, 1]
-numerical_values_neg = [-3, -2, -1, 1, 2, 3]
 rating_values = ['Stark dagegen',
                  'Dagegen',
                  'Eher dagegen',
@@ -369,8 +363,7 @@ pv_regex = 'heat|year|tax|ban|energyclass|exemption'
 pv_filemarker = 'pv'
 
 df_heat = prep_conjoint(df, respondent_columns=respondents, regex_list=heat_regex, filemarker=heat_filemarker) 
-# 1098 participants in heat
 df_pv = prep_conjoint(df, respondent_columns=respondents, regex_list=pv_regex, filemarker=pv_filemarker) 
-# 1115 participants in pv
+
 
 # %%
